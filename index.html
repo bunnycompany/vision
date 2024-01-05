@@ -1,1 +1,84 @@
-<html></html>
+<html>
+  <body>
+    <script>
+      // Called either when the user has explicitly ended the session (like in
+      // onEndSession()) or when the UA has ended the session for any reason.
+      // At this point the session object is no longer usable and should be
+      // discarded.
+      function onSessionEnded(event) {
+        xrButton.setSession(null);
+
+        // In this simple case discard the WebGL context too, since we're not
+        // rendering anything else to the screen with it.
+        renderer = null;
+      }
+
+      // Called every time the XRSession requests that a new frame be drawn.
+      function onXRFrame(t, frame) {
+        let session = frame.session;
+
+        // Per-frame scene setup. Nothing WebXR specific here.
+        scene.startFrame();
+
+        // Inform the session that we're ready for the next frame.
+        session.requestAnimationFrame(onXRFrame);
+
+        // Get the XRDevice pose relative to the Frame of Reference we created
+        // earlier.
+        let pose = frame.getViewerPose(xrRefSpace);
+
+        // Getting the pose may fail if, for example, tracking is lost. So we
+        // have to check to make sure that we got a valid pose before attempting
+        // to render with it. If not in this case we'll just leave the
+        // framebuffer cleared, so tracking loss means the scene will simply
+        // disappear.
+        if (pose) {
+          let glLayer = session.renderState.baseLayer;
+
+          // If we do have a valid pose, bind the WebGL layer's framebuffer,
+          // which is where any content to be displayed on the XRDevice must be
+          // rendered.
+          gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
+
+          // Clear the framebuffer
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+          // Loop through each of the views reported by the frame and draw them
+          // into the corresponding viewport.
+          for (let view of pose.views) {
+            let viewport = glLayer.getViewport(view);
+            gl.viewport(viewport.x, viewport.y,
+                        viewport.width, viewport.height);
+
+            // Draw this view of the scene. What happens in this function really
+            // isn't all that important. What is important is that it renders
+            // into the XRWebGLLayer's framebuffer, using the viewport into that
+            // framebuffer reported by the current view, and using the
+            // projection matrix and view transform from the current view.
+            // We bound the framebuffer and viewport up above, and are passing
+            // in the appropriate matrices here to be used when rendering.
+            scene.draw(view.projectionMatrix, view.transform);
+          }
+        } else {
+          // There's several options for handling cases where no pose is given.
+          // The simplest, which these samples opt for, is to simply not draw
+          // anything. That way the device will continue to show the last frame
+          // drawn, possibly even with reprojection. Alternately you could
+          // re-draw the scene again with the last known good pose (which is now
+          // likely to be wrong), clear to black, or draw a head-locked message
+          // for the user indicating that they should try to get back to an area
+          // with better tracking. In all cases it's possible that the device
+          // may override what is drawn here to show the user it's own error
+          // message, so it should not be anything critical to the application's
+          // use.
+        }
+
+        // Per-frame scene teardown. Nothing WebXR specific here.
+        scene.endFrame();
+      }
+
+      // Start the XR application.
+      initXR();
+    </script>
+  </body>
+</html>
