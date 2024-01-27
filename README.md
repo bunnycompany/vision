@@ -4,4 +4,4 @@ concept of a virtual cafe set in space. using the photosphere effect as a backgr
 
 a cool place to meet with friendly servers and even friendlier hosts
 
-see you there! :3
+see you there!
