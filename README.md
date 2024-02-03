@@ -5,3 +5,5 @@ concept of a virtual cafe set in space. using the photosphere effect as a backgr
 a cool place to meet with flirty servers and even friendlier hosts
 
 see you there!
+
+vision
