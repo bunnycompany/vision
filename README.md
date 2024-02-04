@@ -6,4 +6,4 @@ a cool place to meet with flirty servers and even friendlier hosts
 
 see you there!
 
-vision
+vis
